@@ -1,2 +1,2 @@
 # GSoC
-Graph database application
+Graph database interactive visualization application
