@@ -3,7 +3,11 @@ library(RNeo4j)
 
 #Connect to the graph.
 graph <- startGraph("http://localhost:7474/db/data/", username = "neo4j", password= "NEO4J")
+
+
+## clear the entire database
 clear(graph)
+
 
 #Add uniqueness constraint.
 constraints <- c("CREATE CONSTRAINT ON (ds:DataSource) ASSERT ds.name IS UNIQUE",
