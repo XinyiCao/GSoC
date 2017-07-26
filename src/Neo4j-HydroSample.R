@@ -1,6 +1,5 @@
 ###First Version to create Neo4j database.
 library(RNeo4j)
-library(xlsx)
 
 #Connect to the graph.
 graph <- startGraph("http://localhost:7474/db/data/", username = "neo4j", password= "NEO4J")
@@ -18,58 +17,69 @@ clear(graph)
 # cypher(graph, query)
 
 
-
-
-
-
 #Add uniqueness constraint.
-constraints <- c("CREATE CONSTRAINT ON (ds:DataSource) ASSERT ds.name IS UNIQUE",
-                 "CREATE CONSTRAINT ON (ppds:PowerPlantDataset) ASSERT ppds.name IS UNIQUE",
+constraints <- c("CREATE CONSTRAINT ON (hppd:HydroPowerPlantDataset) ASSERT hppd.name IS UNIQUE",
                  "CREATE CONSTRAINT ON (sd:SpacialData) ASSERT sd.name IS UNIQUE",
-                 "CREATE CONSTRAINT ON (tp:TemporalData) ASSERT tp.datetime IS UNIQUE",
-                 "CREATE CONSTRAINT ON (ut:Unit) ASSERT ut.name IS UNIQUE")
+                 "CREATE CONSTRAINT ON (ut:UNIT) ASSERT ut.name IS UNIQUE")
+
 lapply(constraints, cypher, graph = graph)
 
-#addConstraint(graph,"DataSource","name")
-
-#addConstraint(graph,"PowerPlantDataset","name")
-
-#addConstraint(graph,"SpacialData","name")
-#addConstraint(graph,"TemporalData","datetime")
-
-#addConstraint(graph,"Unit","name")
-
 #Create Nodes.
-swissgrid = createNode(graph, "DataSource", name = "Data Set Swissgrid")
+n100100 = createNode(graph, "HydroPowerPlantDataset", name = "100100")
+n101900 = createNode(graph, "HydroPowerPlantDataset", name = "101900")
+n102000 = createNode(graph, "HydroPowerPlantDataset", name = "102000")
+n102100 = createNode(graph, "HydroPowerPlantDataset", name = "102100")
 
-nuclear = createNode(graph, "PowerPlantDataset", name = "Nuclear Power Plant")
-hydro = createNode(graph, "PowerPlantDataset", name = "Hydro Power Plant")
+vg = createNode(graph, "SpacialData", name = "Val Giuf")
+f1 = createNode(graph, "SpacialData", name = "Ferrera 1")
+f2 = createNode(graph, "SpacialData", name = "Ferrera 2")
+bb = createNode(graph, "SpacialData", name = "Baerenburg")
 
-ch = createNode(graph, "SpacialData", name = "CH")
-de = createNode(graph, "SpacialData", name = "DE")
-fr = createNode(graph, "SpacialData", name = "FR")
+l = createNode(graph, "TemporalDataType", name = "L")
+sp = createNode(graph, "TemporalDataType", name = "S/P")
+s = createNode(graph, "TemporalDataType", name = "S")
 
-d01012017 = createNode(graph, "TemporalData", datetime = "01-01-2017")
-d01022017 = createNode(graph, "TemporalData", datetime = "01-02-2017")
+p63 = createNode(graph, "TemporalDataPumpPower", value = "63")
+
+m6.1 = createNode(graph, "TemporalDataMidPdct", value = "6.1")
+m215.6 = createNode(graph, "TemporalDataMidPdct", value = "215.6")
+m2.5 = createNode(graph, "TemporalDataMidPdct", value = "2.5")
+m491 = createNode(graph, "TemporalDataMidPdct", value = "491")
+
+y1979 = createNode(graph, "TemporalDataInitOpe", yeartime = "1979")
+y1962 = createNode(graph, "TemporalDataInitOpe", yeartime = "1962")
+y1963 = createNode(graph, "TemporalDataInitOpe", yeartime = "1963")
+
+basic = createNode(graph, "TemporalDataLabel", name = "basic")
+
+rhein = createNode(graph, "TemporalDataRiver", name = "Rhein")
 
 mw = createNode(graph, "Unit", name = "MW" )
-kwh = createNode(graph, "Unit", name = "kWh")
 
-#Create relationships.
-#all_datasources = getNodes(graph, "MATCH (n) WHERE n:DataSource RETURN n")
-rels_n = createRel(nuclear, "SOURCED_FROM",swissgrid, color = "Blue")
-rels_h = createRel(hydro, "SOURCED_FROM", swissgrid)
+#Create relationships. 
+reln_s = createRel(n100100, "HAS_LOCATION",vg, color = "Blue")
+reln_s2 = createRel(n102000, "HAS_LOCATION", f2)
+reln_s3 = createRel(n102100, "HAS_LOCATION", bb)
 
-rels_n1 = lapply(list(ch, de), function(g) createRel(nuclear, "HAS_LOCATION",g, color = "Green"))
-all_locations = getNodes(graph, "MATCH (n) WHERE n:SpatialData RETURN n")
-rels_h1 = lapply(all_locations, function(g) createRel(hydro, "HAS_LOCATION",g))
+reln_t1 = lapply(list(n100100, n102000), function(g) createRel(g, "HAS_PROPERTY",l, color = "Green"))
+reln_t2 = createRel(n101900, "HAS_PROPERTY", sp)
+reln_t3 = createRel(n102100, "HAS_PROPERTY", s)
 
-all_datetimes = getNodes(graph, "MATCH (n) WHERE n:TemporalData RETURN n")
-rels_n2 = lapply(all_datetimes, function(g) createRel(nuclear, "HAS_PROPERTY",g, color = "Red"))
-rels_h2 = lapply(all_datetimes, function(g) createRel(hydro, "HAS_PROPERTY",g))
+reln_p = createRel(n101900, "HAS_PROPERTY", p63)
+
+reln_m1 = createRel(n100100, "HAS_PROPERTY", m6.1)
+reln_m2 = createRel(n101900, "HAS_PROPERTY", m215.6)
+
+reln_y1 = lapply(list(n101900, n102100), function(g) createRel(g, "HAS_PROPERTY",y1962))
+reln_y2 = createRel(n102000, "HAS_PROPERTY", y1963)
+
+reln_l = lapply(list(n101900, n102000, n102100), function(g) createRel(g, "HAS_PROPERTY",basic, color = "Orange"))
+
+all_hppd = getNodes(graph, "MATCH (n) WHERE n:HydroPowerPlantDataset RETURN n")
+reln_r = lapply(all_hppd, function(g) createRel(g, "HAS_PROPERTY",rhein, color = "Red"))
 
 all_units = getNodes(graph, "MATCH (n) WHERE n:Unit RETURN n")
-rels_n3 = lapply(all_units, function(g) createRel(hydro, "HAS_UNIT",g, color = "Gray"))
+relp_u = lapply(all_units, function(g) createRel(p63, "HAS_UNIT",g, color = "Yellow"))
 
 #Open the browser.
 browse(graph)
